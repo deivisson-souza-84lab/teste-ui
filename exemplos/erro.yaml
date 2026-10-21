@@ -1,0 +1,15 @@
+id: EX-003
+titulo: Passo de ação sobre elemento inexistente (verifica status de erro)
+host: http://127.0.0.1:8765
+tempo_limite: 2
+login:
+  url: /login.html
+  campo_usuario: username
+  campo_senha: password
+acessar: /painel.html
+testar:
+  - acao: clicar
+    alvo: {papel: button, nome: Botão inexistente}
+validar:
+  - tipo: texto_visivel
+    valor: Lista de pedidos

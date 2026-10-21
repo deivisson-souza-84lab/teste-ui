@@ -1,0 +1,21 @@
+id: EX-001
+titulo: Login e painel exibem a tabela e aceitam o ano informado
+host: http://127.0.0.1:8765
+login:
+  url: /login.html
+  campo_usuario: username
+  campo_senha: password
+acessar: /painel.html
+testar:
+  - acao: preencher
+    alvo: {rotulo: Ano}
+    valor: 2026
+validar:
+  - tipo: texto_visivel
+    valor: Lista de pedidos
+  - tipo: minimo_linhas
+    alvo: {css: "tbody tr"}
+    minimo: 2
+  - tipo: valor_campo
+    alvo: {rotulo: Ano}
+    valor: 2026

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Login de exemplo</title>
+</head>
+<body>
+  <h1>Entrar</h1>
+  <form id="formulario">
+    <label for="usuario">Usuário</label>
+    <input id="usuario" name="username">
+    <label for="senha">Senha</label>
+    <input id="senha" name="password" type="password">
+    <p id="erro" hidden>Usuário ou senha inválidos</p>
+    <button type="submit">Entrar</button>
+  </form>
+  <script>
+    document.getElementById('formulario').addEventListener('submit', (evento) => {
+      evento.preventDefault();
+      const ok = document.getElementById('usuario').value === 'tester'
+        && document.getElementById('senha').value === 'tester123';
+      if (ok) {
+        location.href = 'painel.html';
+      } else {
+        document.getElementById('erro').hidden = false;
+      }
+    });
+  </script>
+</body>
+</html>

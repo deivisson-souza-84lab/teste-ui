@@ -1,0 +1,13 @@
+id: EX-002
+titulo: Validação proposital que deve falhar (verifica invalidação e print)
+host: http://127.0.0.1:8765
+tempo_limite: 2
+login:
+  url: /login.html
+  campo_usuario: username
+  campo_senha: password
+acessar: /painel.html
+testar: []
+validar:
+  - tipo: texto_visivel
+    valor: Texto que não existe na página

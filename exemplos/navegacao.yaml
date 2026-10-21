@@ -1,0 +1,15 @@
+id: EX-004
+titulo: Após o login, a partir da página inicial, o usuário chega ao Cadastro pelo menu
+host: http://127.0.0.1:8765
+login:
+  url: /login.html
+  campo_usuario: username
+  campo_senha: password
+testar:
+  - acao: clicar
+    alvo: {papel: link, nome: Cadastro}
+validar:
+  - tipo: url_contem
+    valor: cadastro.html
+  - tipo: texto_visivel
+    valor: Cadastro de produtos

@@ -1,0 +1,4 @@
+.venv/
+saidas/
+__pycache__/
+casos/listagem-iodo.yaml

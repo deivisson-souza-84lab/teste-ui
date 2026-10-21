@@ -181,14 +181,22 @@ def _rodar(args):
             print("Login ou senha vazios. Execução cancelada.")
             return 2
 
+    segredos = []
+    for dados in roteiros:
+        valores = _pedir_segredos(dados.get("segredos") or {})
+        if valores is None:
+            print("Segredo vazio. Execução cancelada.")
+            return 2
+        segredos.append(valores)
+
     pasta = args.saida / datetime.now().strftime("%Y%m%d-%H%M%S")
     pasta.mkdir(parents=True)
     casos = []
     with sync_playwright() as playwright:
         navegador = playwright.chromium.launch(headless=not args.visivel)
         try:
-            for dados in roteiros:
-                caso = executor.executar(navegador, dados, credenciais, pasta, args.screenshots, args.banner)
+            for dados, valores in zip(roteiros, segredos):
+                caso = executor.executar(navegador, dados, credenciais, pasta, args.screenshots, args.banner, valores)
                 registro.gravar(caso)
                 casos.append(caso)
                 print(registro.linha(caso))
@@ -232,3 +240,13 @@ def _pedir_credenciais():
     usuario = input("Login: ").strip()
     senha = getpass.getpass("Senha: ")
     return (usuario, senha) if usuario and senha else None
+
+
+def _pedir_segredos(declarados):
+    valores = {}
+    for nome, pergunta in declarados.items():
+        valor = getpass.getpass(f"{pergunta}: ")
+        if not valor:
+            return None
+        valores[nome] = valor
+    return valores

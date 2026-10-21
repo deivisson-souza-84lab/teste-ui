@@ -7,7 +7,7 @@ from testes_ui import acoes
 from testes_ui.registro import Caso
 
 
-def executar(navegador, roteiro, credenciais, pasta, screenshots, banner):
+def executar(navegador, roteiro, credenciais, pasta, screenshots, banner, segredos=None):
     caso = Caso(roteiro, pasta, screenshots, banner)
     tempo = roteiro["tempo_limite"] * 1000
     contexto = navegador.new_context(base_url=roteiro["host"])
@@ -27,7 +27,8 @@ def executar(navegador, roteiro, credenciais, pasta, screenshots, banner):
 
         for passo in roteiro.get("testar") or []:
             descricao = f"{passo['acao']} em {_texto_alvo(passo['alvo'])}"
-            etapa = _etapa(caso, pagina, "testar", descricao, acoes.executar, pagina, passo, tempo, alvo=passo["alvo"])
+            passo_real = _com_segredos(passo, segredos or {})
+            etapa = _etapa(caso, pagina, "testar", descricao, acoes.executar, pagina, passo_real, tempo, alvo=passo["alvo"])
             if etapa != "ok":
                 return caso
 
@@ -79,6 +80,14 @@ def _alvo_marcado(item):
     if item["tipo"] == "texto_visivel":
         return {"texto": str(item["valor"])}
     return None
+
+
+def _com_segredos(passo, segredos):
+    """Troca {segredo: nome} pelo valor digitado na execução. O valor não é guardado no roteiro nem no registro."""
+    valor = passo.get("valor")
+    if not isinstance(valor, dict):
+        return passo
+    return {**passo, "valor": segredos[valor["segredo"]]}
 
 
 def _texto_alvo(alvo):

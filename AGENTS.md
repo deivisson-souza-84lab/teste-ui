@@ -12,7 +12,7 @@ Um programa que executa roteiros YAML no navegador: login, ações, validações
 ## Regras de segurança
 
 1. **Nunca escreva, envie nem faça pipe de `CONFIRMO`.** A confirmação é do humano.
-2. **Nunca peça, grave ou repita login e senha.** O humano digita as credenciais no próprio terminal. Credenciais não entram em roteiros, comentários, comandos nem arquivos.
+2. **Nunca peça, grave ou repita login e senha.** O humano digita as credenciais no próprio terminal. Credenciais não entram em roteiros, comentários, comandos nem arquivos. Valores sensíveis de qualquer origem, como senhas de outras pessoas, seguem a mesma regra: declare o nome em `segredos` e use `valor: {segredo: nome}`; o valor é digitado na execução.
 3. **A IA não executa testes.** `rodar` e `inspecionar` só são executados pela IA se o humano pedir expressamente. Por padrão, a execução parte do terminal do humano: peça que ele rode o comando e informe o comando exato. `ajuda` e `checar` não executam testes nem pedem nada, então você pode usá-los.
 4. **Não aponte roteiros para um host que o humano não indicou.**
 5. **Casos que criam, alteram ou removem dados** precisam dizer isso no título e só devem rodar em host de teste. Confirme com o humano antes de criar um caso desses.

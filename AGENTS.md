@@ -11,9 +11,9 @@ Um programa que executa roteiros YAML no navegador: login, ações, validações
 
 ## Regras de segurança
 
-1. **Nunca escreva, envie nem faça pipe de `CONFIRMO`.** A confirmação é do humano.
-2. **Nunca peça, grave ou repita login e senha.** O humano digita as credenciais no próprio terminal. Credenciais não entram em roteiros, comentários, comandos nem arquivos. Valores sensíveis de qualquer origem, como senhas de outras pessoas, seguem a mesma regra: declare o nome em `segredos` e use `valor: {segredo: nome}`; o valor é digitado na execução.
-3. **A IA não executa testes.** `rodar` e `inspecionar` só são executados pela IA se o humano pedir expressamente. Por padrão, a execução parte do terminal do humano: peça que ele rode o comando e informe o comando exato. `ajuda` e `checar` não executam testes nem pedem nada, então você pode usá-los.
+1. **Nunca escreva, envie nem faça pipe de `CONFIRMO`.** A confirmação é do humano, e só é pedida no comando `rodar` (interativo). O `rodar-auto` não pede confirmação.
+2. **Login e senha nunca entram em roteiros, comentários, comandos, arquivos versionados ou memória.** A execução automática lê `TESTES_UI_LOGIN` e `TESTES_UI_SENHA` do ambiente, e os segredos de `TESTES_UI_SEGREDO_<NOME>`. Os valores ficam no arquivo `~/.config/testes-ui/ambiente` (fora do repositório, permissão 600), ou no shell. A IA pode criar e manter esse arquivo, mas nunca mostrar seus valores. Valores sensíveis de qualquer origem, como senhas de outras pessoas, seguem a mesma regra: declare o nome em `segredos` e use `valor: {segredo: nome}`.
+3. **A IA executa os testes com `rodar-auto`.** Não há autorização prévia por host. Só use hosts que o humano indicou. `rodar` e `inspecionar` pedem confirmação e credenciais no terminal, então são do humano: peça que ele rode o comando e informe o comando exato. `ajuda` e `checar` não executam testes nem pedem nada, então você pode usá-los.
 4. **Não aponte roteiros para um host que o humano não indicou.**
 5. **Casos que criam, alteram ou removem dados** precisam dizer isso no título e só devem rodar em host de teste. Confirme com o humano antes de criar um caso desses.
 6. **Arquivos de `inspecionar` podem conter dados reais** (nomes, valores de campos, linhas de tabela). Use deles só papéis e nomes de controles. Nunca copie valores de dados para o roteiro.
@@ -42,14 +42,14 @@ Um programa que executa roteiros YAML no navegador: login, ações, validações
    Não invente nomes que não aparecem no arquivo.
 6. Escreva `testar` e `validar`. Cada validação deve falhar se a funcionalidade quebrar. Confirmar só que a página abriu é pouco; prefira confirmar um dado que o usuário veria.
 7. Rode `python -m testes_ui checar casos/<arquivo>.yaml` e corrija até aparecer `OK`.
-8. Peça ao humano que rode, no terminal dele:
+8. Execute:
 
    ```
-   python -m testes_ui rodar casos/<arquivo>.yaml --screenshots all
+   python -m testes_ui rodar-auto casos/<arquivo>.yaml --screenshots all
    ```
 
-   Ele deve digitar a confirmação, o login e a senha.
-9. Leia `saidas/<data-hora>/<ID>.json` ou o resumo que o humano colar. Interprete o resultado (próxima seção), ajuste o roteiro e volte ao passo 7.
+   O login e os segredos vêm do ambiente. Se faltar alguma variável, o comando mostra só o nome dela. Nesse caso, peça ao humano que a defina, sem pedir o valor.
+9. Leia `saidas/<data-hora>/<ID>.json` ou o resumo que aparece na execução. Interprete o resultado (próxima seção), ajuste o roteiro e volte ao passo 7.
 
 ## Como interpretar o resultado
 

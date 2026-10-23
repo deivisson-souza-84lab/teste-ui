@@ -1,4 +1,4 @@
-"""Ponto de entrada: ajuda, checagem, leitura de tela e execução dos roteiros."""
+"""Ponto de entrada: ajuda, checagem, leitura de tela, execução dos roteiros e execução automática."""
 
 import argparse
 import getpass
@@ -12,7 +12,7 @@ import yaml
 from playwright.sync_api import Error as ErroPlaywright
 from playwright.sync_api import sync_playwright
 
-from testes_ui import acoes, executor, registro, roteiro
+from testes_ui import acoes, ambiente, executor, registro, roteiro
 
 RAIZ = Path(__file__).resolve().parent.parent
 SAIDA_PADRAO = Path(os.environ.get("TESTES_UI_SAIDA", RAIZ / "saidas"))
@@ -27,6 +27,7 @@ COMANDOS = {
     "checar CAMINHO": "valida roteiros sem abrir o navegador e sem pedir confirmação ou login",
     "inspecionar ARQUIVO [--seletor CSS]": "lê a tela do roteiro e salva papéis e nomes dos elementos, para escolher alvos",
     "rodar CAMINHO [opções]": "executa os roteiros; pede confirmação, login e senha",
+    "rodar-auto CAMINHO [opções]": "executa sem perguntar, para agentes; login e segredos vêm de variáveis de ambiente",
 }
 
 
@@ -35,26 +36,12 @@ def main(argv=None):
     comandos = parser.add_subparsers(dest="comando", required=True)
 
     rodar = comandos.add_parser("rodar", help="executa um roteiro ou todos os .yaml de uma pasta")
-    rodar.add_argument("caminho", type=Path)
-    rodar.add_argument("--visivel", action="store_true", help="mostra o navegador durante a execução")
-    rodar.add_argument(
-        "--saida",
-        type=Path,
-        default=SAIDA_PADRAO,
-        help="pasta das evidências (padrão: saidas/ no projeto, ou o valor de TESTES_UI_SAIDA)",
+    _opcoes_execucao(rodar)
+
+    automatico = comandos.add_parser(
+        "rodar-auto", help="executa sem perguntar, para agentes; login e segredos vêm de variáveis de ambiente"
     )
-    rodar.add_argument(
-        "--screenshots",
-        choices=("failures", "all"),
-        default="failures",
-        help="em quais passos tirar print: só nas falhas (padrão) ou em todos",
-    )
-    rodar.add_argument(
-        "--banner",
-        choices=("failures", "all"),
-        default="failures",
-        help="em quais prints marcar o passo (faixa e contorno): só nas falhas (padrão) ou em todos",
-    )
+    _opcoes_execucao(automatico)
 
     checar = comandos.add_parser("checar", help="valida o formato dos roteiros, sem abrir o navegador")
     checar.add_argument("caminho", type=Path)
@@ -80,7 +67,33 @@ def main(argv=None):
         return _checar(args.caminho)
     if args.comando == "inspecionar":
         return _inspecionar(args.arquivo, args.seletor, args.saida)
+    if args.comando == "rodar-auto":
+        return _rodar_auto(args)
     return _rodar(args)
+
+
+def _opcoes_execucao(parser):
+    """Opções comuns a rodar e rodar-auto."""
+    parser.add_argument("caminho", type=Path)
+    parser.add_argument("--visivel", action="store_true", help="mostra o navegador durante a execução")
+    parser.add_argument(
+        "--saida",
+        type=Path,
+        default=SAIDA_PADRAO,
+        help="pasta das evidências (padrão: saidas/ no projeto, ou o valor de TESTES_UI_SAIDA)",
+    )
+    parser.add_argument(
+        "--screenshots",
+        choices=("failures", "all"),
+        default="failures",
+        help="em quais passos tirar print: só nas falhas (padrão) ou em todos",
+    )
+    parser.add_argument(
+        "--banner",
+        choices=("failures", "all"),
+        default="failures",
+        help="em quais prints marcar o passo (faixa e contorno): só nas falhas (padrão) ou em todos",
+    )
 
 
 def montar_ajuda():
@@ -189,6 +202,11 @@ def _rodar(args):
             return 2
         segredos.append(valores)
 
+    return _executar(roteiros, credenciais, segredos, args)
+
+
+def _executar(roteiros, credenciais, segredos, args):
+    """Roda os casos já confirmados e com login e segredos em mãos. Devolve o código de saída."""
     pasta = args.saida / datetime.now().strftime("%Y%m%d-%H%M%S")
     pasta.mkdir(parents=True)
     casos = []
@@ -205,6 +223,42 @@ def _rodar(args):
 
     print(registro.resumo(casos, pasta))
     return 0 if all(caso.status == "aprovado" for caso in casos) else 1
+
+
+def _rodar_auto(args):
+    """Execução sem perguntas, feita por agente. Login e segredos vêm do ambiente; nunca são mostrados."""
+    try:
+        arquivo = ambiente.carregar()
+    except ambiente.AmbienteInvalido as erro:
+        print(f"Ambiente inválido: {erro}", file=sys.stderr)
+        return 2
+
+    roteiros = _carregar(args.caminho)
+    if roteiros is None:
+        return 2
+
+    hosts = sorted({dados["host"] for dados in roteiros})
+    credenciais = None
+    if any("login" in dados for dados in roteiros):
+        credenciais = ambiente.login()
+        if credenciais is None:
+            print(
+                f"Faltam {ambiente.VARIAVEL_LOGIN} ou {ambiente.VARIAVEL_SENHA} no ambiente.",
+                file=sys.stderr,
+            )
+            return 2
+
+    segredos = []
+    for dados in roteiros:
+        valores, faltando = ambiente.segredos(dados.get("segredos") or {})
+        if faltando:
+            print(f"Caso {dados['id']}: faltam variáveis de segredo: {', '.join(faltando)}", file=sys.stderr)
+            return 2
+        segredos.append(valores)
+
+    origem = f" (ambiente: {arquivo})" if arquivo else ""
+    print(f"Execução automática de {len(roteiros)} caso(s) em {', '.join(hosts)}{origem}.")
+    return _executar(roteiros, credenciais, segredos, args)
 
 
 def _carregar(caminho):

@@ -16,6 +16,15 @@ Para aprender a escrever roteiros, leia o [TUTORIAL.md](TUTORIAL.md). Se for usa
 | `python -m testes_ui checar CAMINHO` | valida roteiros sem abrir o navegador | não |
 | `python -m testes_ui inspecionar ARQUIVO [--seletor CSS]` | lê a tela do roteiro e salva papéis e nomes dos elementos em `saidas/inspecoes/`, para escolher alvos | confirmação, login e senha |
 | `python -m testes_ui rodar CAMINHO [opções]` | executa os roteiros | confirmação, login e senha |
+| `python -m testes_ui rodar-auto CAMINHO [opções]` | executa sem perguntas, para agentes. Login e segredos vêm de variáveis de ambiente | não |
+
+### Execução automática
+
+O `rodar-auto` dispensa perguntas e não pede confirmação. Três regras:
+
+1. **Login e segredos no ambiente.** Defina `TESTES_UI_LOGIN` e `TESTES_UI_SENHA`. Cada segredo declarado no roteiro vem de `TESTES_UI_SEGREDO_<NOME>`, em maiúsculas (por exemplo, `tecnico_senha` vira `TESTES_UI_SEGREDO_TECNICO_SENHA`). Também podem ficar em um arquivo `CHAVE=VALOR`, em `~/.config/testes-ui/ambiente` (ou no caminho de `TESTES_UI_AMBIENTE`). Variável já definida no shell tem prioridade. O arquivo precisa de permissão `600`, e fica fora do repositório.
+2. **Nada de valor na tela.** Se uma variável faltar, o comando mostra só o nome dela.
+3. **Hosts indicados.** Só rode roteiros de hosts que a pessoa responsável indicou.
 
 `inspecionar` não clica nem grava nada. Seu arquivo de saída pode conter dados da tela, então revise antes de enviá-lo a outra pessoa ou a uma IA.
 

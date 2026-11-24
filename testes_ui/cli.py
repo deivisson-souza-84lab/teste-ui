@@ -94,6 +94,11 @@ def _opcoes_execucao(parser):
         default="failures",
         help="em quais prints marcar o passo (faixa e contorno): só nas falhas (padrão) ou em todos",
     )
+    parser.add_argument(
+        "--login-por-caso",
+        action="store_true",
+        help="faz o login em todos os casos; por padrão, a sessão do primeiro login vale para a rodada inteira",
+    )
 
 
 def montar_ajuda():
@@ -210,11 +215,14 @@ def _executar(roteiros, credenciais, segredos, args):
     pasta = args.saida / datetime.now().strftime("%Y%m%d-%H%M%S")
     pasta.mkdir(parents=True)
     casos = []
+    sessoes = None if getattr(args, "login_por_caso", False) else executor.Sessoes()
     with sync_playwright() as playwright:
         navegador = playwright.chromium.launch(headless=not args.visivel)
         try:
             for dados, valores in zip(roteiros, segredos):
-                caso = executor.executar(navegador, dados, credenciais, pasta, args.screenshots, args.banner, valores)
+                caso = executor.executar(
+                    navegador, dados, credenciais, pasta, args.screenshots, args.banner, valores, sessoes
+                )
                 registro.gravar(caso)
                 casos.append(caso)
                 print(registro.linha(caso))

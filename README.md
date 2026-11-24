@@ -83,6 +83,15 @@ Antes de começar, o programa mostra os hosts e os casos e pede a confirmação 
 
 Depois da confirmação, pede o login e a senha. Eles ficam só na memória do processo: não são gravados em arquivo, JSON, log nem print.
 
+### Sessão por rodada
+
+O formulário de login é preenchido uma vez por rodada, para cada host e login. O primeiro caso entra no sistema, e o programa guarda o estado do navegador (cookies e localStorage). Os casos seguintes começam com uma cópia desse estado, e o passo de login aparece como "Entrar no sistema (sessão da rodada)". Isso evita os limites de tentativas de login que muitos sistemas têm (por exemplo, 5 por minuto).
+
+- Cada caso continua com o próprio navegador. O que um caso muda (tema, localStorage, um carrinho) não passa para o próximo.
+- Se a sessão guardada não valer mais, porque expirou ou porque um caso clicou em "Sair", o caso seguinte cai na tela de login e o programa entra de novo.
+- O estado fica só na memória, durante a rodada. Nada vai para o disco.
+- Para fazer o login em todos os casos, como antes, use `--login-por-caso`.
+
 ## Roteiro (YAML)
 
 O exemplo a seguir é `exemplos/aprovado.yaml`:
@@ -190,6 +199,7 @@ prints:
 ## Limites atuais
 
 - O login é por formulário, com campos identificados pelo atributo `name` e envio por Enter.
+- A sessão por rodada considera que o login terminou numa página que só quem está logado vê. Se a sessão cair, o programa só percebe quando o formulário de login aparece.
 - O navegador usado é o Chromium.
 - Os roteiros não criam massa de dados: quem executa precisa garantir os dados que o caso espera.
 

@@ -69,7 +69,7 @@ Se a mensagem disser `o alvo encontrou N elementos visíveis`, troque o alvo por
 
 - Um caso por comportamento. O `id` tem prefixo da tela e número: `CAD-001`.
 - Títulos descrevem o comportamento verificado, não o passo a passo.
-- Nenhum caso depende de outro. Cada um faz o próprio login.
+- Nenhum caso depende de outro. Cada um declara o próprio `login`, mesmo que a rodada reaproveite a sessão do primeiro login (veja "Sessão por rodada" no README). Use `--login-por-caso` só quando o próprio login for o comportamento testado.
 - Diga ao humano quais dados o caso espera (por exemplo, "precisa haver um pedido no ano 2026"). Quem executa garante esses dados.
 
 ## O que você não deve fazer

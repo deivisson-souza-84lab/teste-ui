@@ -218,7 +218,7 @@ Rodapés fixos na parte de baixo da janela já são tratados pelo programa. Voc�
 
 - **Um caso, um comportamento.** Se o título tem "e" no meio, talvez sejam dois casos.
 - **Valide o efeito, não só o clique.** Um clique que não gera erro não prova nada. Confirme o texto, o valor ou o endereço que aparece depois.
-- **Cada caso é independente.** Ele faz o próprio login e começa do zero. Não conte com um caso anterior ter deixado a tela em algum estado.
+- **Cada caso é independente.** Ele começa do zero, num navegador próprio, já logado. O login é feito uma vez por rodada e a sessão é reaproveitada, mas o que um caso muda na tela não passa para o próximo. Não conte com um caso anterior ter deixado a tela em algum estado.
 - **Diga os dados que o caso espera.** Se o caso precisa de um pedido existente, diga isso no título ou num comentário. Quem executa é quem garante esses dados.
 - **Casos que gravam, alteram ou removem dados** devem dizer isso no título e rodar só em um host de teste. O programa mostra os casos antes de pedir a confirmação, mas o título é o que fica registrado.
 - **Nunca coloque senha no arquivo.** Login e senha são pedidos na execução.

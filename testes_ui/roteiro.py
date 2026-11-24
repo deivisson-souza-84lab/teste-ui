@@ -31,6 +31,7 @@ DESCRICAO_CAMPOS = {
     "validar": "confirmações sobre a tela; todas são executadas",
     "tempo_limite": "segundos que cada passo espera (padrão 10)",
     "prints": "ocultar: seletores CSS que ficam invisíveis só nos prints",
+    "segredos": "valores sensíveis, como senhas, pedidos na execução, no formato nome: pergunta. Use valor: {segredo: nome}; o valor nunca vai para o roteiro",
 }
 DESCRICAO_ACOES = {
     "clicar": "clica no elemento",
@@ -89,6 +90,7 @@ def _validar(roteiro):
         _exigir(roteiro["login"], CAMPOS_LOGIN, "login")
     if "prints" in roteiro:
         _validar_prints(roteiro["prints"])
+    segredos = _validar_segredos(roteiro.get("segredos"))
 
     for n, passo in enumerate(roteiro.get("testar") or [], 1):
         onde = f"testar[{n}]"
@@ -97,6 +99,7 @@ def _validar(roteiro):
             raise RoteiroInvalido(f"{onde}: ação desconhecida '{passo['acao']}'")
         _exigir(passo, ACOES[passo["acao"]], onde)
         _validar_alvo(passo["alvo"], onde)
+        _validar_valor(passo, segredos, onde)
 
     for n, item in enumerate(roteiro.get("validar") or [], 1):
         onde = f"validar[{n}]"
@@ -122,6 +125,22 @@ def _validar_prints(prints):
     ocultar = prints.get("ocultar", [])
     if not isinstance(ocultar, list) or not all(isinstance(seletor, str) for seletor in ocultar):
         raise RoteiroInvalido("prints.ocultar: esperada uma lista de seletores CSS")
+
+
+def _validar_segredos(segredos):
+    if segredos is None:
+        return {}
+    if not isinstance(segredos, dict) or not all(isinstance(pergunta, str) for pergunta in segredos.values()):
+        raise RoteiroInvalido("segredos: esperado um mapa de nome para a pergunta mostrada na execução")
+    return segredos
+
+
+def _validar_valor(passo, segredos, onde):
+    valor = passo.get("valor")
+    if not isinstance(valor, dict):
+        return
+    if set(valor) != {"segredo"} or valor["segredo"] not in segredos:
+        raise RoteiroInvalido(f"{onde}: valor em mapa só aceita 'segredo', com um nome declarado em segredos")
 
 
 def _validar_alvo(alvo, onde):

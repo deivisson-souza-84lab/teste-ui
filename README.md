@@ -16,6 +16,15 @@ Para aprender a escrever roteiros, leia o [TUTORIAL.md](TUTORIAL.md). Se for usa
 | `python -m testes_ui checar CAMINHO` | valida roteiros sem abrir o navegador | não |
 | `python -m testes_ui inspecionar ARQUIVO [--seletor CSS]` | lê a tela do roteiro e salva papéis e nomes dos elementos em `saidas/inspecoes/`, para escolher alvos | confirmação, login e senha |
 | `python -m testes_ui rodar CAMINHO [opções]` | executa os roteiros | confirmação, login e senha |
+| `python -m testes_ui rodar-auto CAMINHO [opções]` | executa sem perguntas, para agentes. Login e segredos vêm de variáveis de ambiente | não |
+
+### Execução automática
+
+O `rodar-auto` dispensa perguntas e não pede confirmação. Três regras:
+
+1. **Login e segredos no ambiente.** Defina `TESTES_UI_LOGIN` e `TESTES_UI_SENHA`. Cada segredo declarado no roteiro vem de `TESTES_UI_SEGREDO_<NOME>`, em maiúsculas (por exemplo, `tecnico_senha` vira `TESTES_UI_SEGREDO_TECNICO_SENHA`). Também podem ficar em um arquivo `CHAVE=VALOR`, em `~/.config/testes-ui/ambiente` (ou no caminho de `TESTES_UI_AMBIENTE`). Variável já definida no shell tem prioridade. O arquivo precisa de permissão `600`, e fica fora do repositório.
+2. **Nada de valor na tela.** Se uma variável faltar, o comando mostra só o nome dela.
+3. **Hosts indicados.** Só rode roteiros de hosts que a pessoa responsável indicou.
 
 `inspecionar` não clica nem grava nada. Seu arquivo de saída pode conter dados da tela, então revise antes de enviá-lo a outra pessoa ou a uma IA.
 
@@ -73,6 +82,15 @@ python -m testes_ui rodar casos/ --screenshots all --banner all    # print de to
 Antes de começar, o programa mostra os hosts e os casos e pede a confirmação `CONFIRMO`, porque o roteiro pode listar, gravar, atualizar e remover informações do banco. Sem a confirmação, nada é executado.
 
 Depois da confirmação, pede o login e a senha. Eles ficam só na memória do processo: não são gravados em arquivo, JSON, log nem print.
+
+### Sessão por rodada
+
+O formulário de login é preenchido uma vez por rodada, para cada host e login. O primeiro caso entra no sistema, e o programa guarda o estado do navegador (cookies e localStorage). Os casos seguintes começam com uma cópia desse estado, e o passo de login aparece como "Entrar no sistema (sessão da rodada)". Isso evita os limites de tentativas de login que muitos sistemas têm (por exemplo, 5 por minuto).
+
+- Cada caso continua com o próprio navegador. O que um caso muda (tema, localStorage, um carrinho) não passa para o próximo.
+- Se a sessão guardada não valer mais, porque expirou ou porque um caso clicou em "Sair", o caso seguinte cai na tela de login e o programa entra de novo.
+- O estado fica só na memória, durante a rodada. Nada vai para o disco.
+- Para fazer o login em todos os casos, como antes, use `--login-por-caso`.
 
 ## Roteiro (YAML)
 
@@ -181,6 +199,7 @@ prints:
 ## Limites atuais
 
 - O login é por formulário, com campos identificados pelo atributo `name` e envio por Enter.
+- A sessão por rodada considera que o login terminou numa página que só quem está logado vê. Se a sessão cair, o programa só percebe quando o formulário de login aparece.
 - O navegador usado é o Chromium.
 - Os roteiros não criam massa de dados: quem executa precisa garantir os dados que o caso espera.
 
